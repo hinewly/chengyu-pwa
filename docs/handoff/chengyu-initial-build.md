@@ -30,7 +30,7 @@ DaoBox 家族新子应用（用户 2026-10-26 拍板方案 A）：**学习类「
 - [x] 国内部署：rsync → /opt/chengyu-pwa、systemd chengyu-pwa（8797，active）、Caddy（2026-10-26 01:18）
 - [x] DNS：A 记录 chengyu → 47.108.83.209（2026-10-26 01:13，浏览器操作阿里云控制台）
 - [x] 线上 E2E：全资源 200、Let's Encrypt 证书签发、DB_HOME 自动识别国内域、同音字接龙 +10 分实测、portal 悬浮胶囊「剩10分」（2026-10-26 01:20）
-- [ ] daobox-home：学习区入口卡片 + portal.js PILL_ANCHORS 加 chengyu（现走悬浮胶囊兜底，可用但未内嵌顶栏；跨项目待用户确认）
+- [x] daobox-home：学习区入口卡片上线（v1.4.8-audit，2026-10-26 01:40，实测卡片渲染+跳转+portal 胶囊）；打卡名单同步 chengyu；PILL_ANCHORS 走悬浮胶囊兜底（与 2048/消消乐一致）
 - [ ] 手机实测 + 海外部署（暂缓）
 
 ## 重要决策
