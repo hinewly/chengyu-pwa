@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script>
+    // 双域名适配：国内站 daobox.net.cn / 海外站 daobox.app，门户与登录按当前域名自动选择
+    window.DB_HOME = location.hostname.indexOf('daobox.net.cn') !== -1
+      ? 'https://daobox.net.cn' : 'https://daobox.app';
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>成语接龙 · DaoBox 学习小游戏</title>
+  <meta name="description" content="DaoBox 成语接龙：接龙闯关 + 成语填空两种玩法，带拼音注音，边玩边学常用成语！">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#b91c1c">
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">🐉 成语接龙</div>
+      <div class="topbar-tools"><span class="version-badge" id="app-version">v0.1.0</span><button class="refresh-btn" id="refresh-btn" type="button" title="强制刷新 · 清缓存重载" aria-label="强制刷新">↻</button></div>
+      <div class="topbar-slot" id="db-account-slot"></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="mode-switch" role="tablist">
+      <button id="mode-chain" class="mode-btn active" type="button">🔗 接龙闯关</button>
+      <button id="mode-blank" class="mode-btn" type="button">✏️ 成语填空</button>
+    </section>
+
+    <section class="hud">
+      <div class="score-box">
+        <div class="score-label">得分</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-box">
+        <div class="score-label">连击</div>
+        <div class="score-value" id="streak">0</div>
+      </div>
+      <div class="score-box">
+        <div class="score-label" id="best-label">最佳</div>
+        <div class="score-value" id="best">0</div>
+      </div>
+    </section>
+
+    <!-- 接龙模式 -->
+    <section id="chain-panel">
+      <div class="chain-strip" id="chain-strip"></div>
+      <div class="question-card">
+        <div class="question-title" id="chain-q">请接一个以 <b id="tail-char">—</b> 开头的成语</div>
+        <div class="question-sub" id="tail-py"></div>
+      </div>
+    </section>
+
+    <!-- 填空模式 -->
+    <section id="blank-panel" class="hidden">
+      <div class="question-card">
+        <div class="question-title">补全这个成语</div>
+        <div class="blank-idiom" id="blank-idiom"></div>
+        <div class="question-sub" id="blank-py"></div>
+      </div>
+    </section>
+
+    <div class="options" id="options"></div>
+
+    <div id="feedback" class="feedback hidden"></div>
+
+    <div class="btn-row">
+      <button id="btn-skip" class="btn" type="button">换一题</button>
+    </div>
+
+    <section class="tips">
+      <h2>玩法说明</h2>
+      <ul>
+        <li><b>接龙闯关</b>：选一个以上一个成语尾字（或同音字）开头的成语，接得越长分越高，接到底有奖励分。</li>
+        <li><b>成语填空</b>：从四个字里选出成语缺的那个字，全部带拼音注音，边玩边认字。</li>
+        <li>连击越高，得分越多；答错不扣分，连击清零。</li>
+        <li>最高分自动保存在本机。</li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="time-lock" class="modal-mask hidden">
+    <div class="modal-card">
+      <div class="win-emoji">⏰</div>
+      <h3>今日免费时长已用完</h3>
+      <p>注册登录每天可获得更多时长。</p>
+      <div class="modal-btns">
+        <a id="lock-login" class="primary-btn" href="javascript:void(0)">注册 / 登录</a>
+        <button id="lock-close" class="secondary-btn" type="button">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <a id="home-link" href="javascript:void(0)">← 返回 DaoBox 工具箱</a>
+    <span class="dot">·</span>
+    <span id="contact-email"></span>
+  </footer>
+
+  <script>
+    // 联系邮箱运行时拼接（防 Cloudflare obfuscate）
+    (function () {
+      var u = 'support', d = 'daobox.net.cn';
+      document.getElementById('contact-email').innerHTML =
+        '<a href="mailto:' + u + '@' + d + '">' + u + '@' + d + '</a>';
+    })();
+  </script>
+  <script src="data.js?v=1"></script>
+  <script src="app.js?v=1"></script>
+  <script>document.write('<script src="' + window.DB_HOME + '/portal.js" data-app="chengyu"><\/script>');</script>
+  <script>
+    (function () {
+      var login = document.getElementById('lock-login');
+      if (login) login.href = window.DB_HOME + '/login?src=chengyu';
+      var home = document.getElementById('home-link');
+      if (home) home.href = window.DB_HOME + '?src=chengyu';
+    })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
