@@ -14,7 +14,7 @@
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="theme-color" content="#b91c1c">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -50,7 +50,7 @@
     <section id="chain-panel">
       <div class="chain-strip" id="chain-strip"></div>
       <div class="question-card">
-        <div class="question-title" id="chain-q">请接一个以 <b id="tail-char">—</b> 开头的成语</div>
+        <div class="question-title" id="chain-q">请接一个以 <b id="tail-char">—</b> 开头的成语 <span class="q-hint">（同音字也算）</span></div>
         <div class="question-sub" id="tail-py"></div>
       </div>
     </section>
@@ -98,6 +98,8 @@
   <footer class="footer">
     <a id="home-link" href="javascript:void(0)">← 返回 DaoBox 工具箱</a>
     <span class="dot">·</span>
+    <a id="app-home-link" href="./?src=home">🏠 成语接龙首页</a>
+    <span class="dot">·</span>
     <span id="contact-email"></span>
   </footer>
 
@@ -109,8 +111,8 @@
         '<a href="mailto:' + u + '@' + d + '">' + u + '@' + d + '</a>';
     })();
   </script>
-  <script src="data.js?v=1"></script>
-  <script src="app.js?v=1"></script>
+  <script src="data.js?v=2"></script>
+  <script src="app.js?v=2"></script>
   <script>document.write('<script src="' + window.DB_HOME + '/portal.js" data-app="chengyu"><\/script>');</script>
   <script>
     (function () {

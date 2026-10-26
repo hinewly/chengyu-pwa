@@ -1,7 +1,7 @@
 /* 成语接龙 · DaoBox 家族（v0.1.0） */
 "use strict";
 
-var APP_VERSION = "v0.1.0";
+var APP_VERSION = "v0.1.1";
 var STORE_KEY = "dbcy-save";
 var CHAIN_BASE = 10;   // 接龙基础分
 var CHAIN_END_BONUS = 30; // 接到底奖励
