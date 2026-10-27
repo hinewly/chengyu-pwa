@@ -14,19 +14,24 @@
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="theme-color" content="#b91c1c">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">🐉 成语接龙</div>
-      <div class="topbar-tools"><span class="version-badge" id="app-version">v0.1.0</span><button class="refresh-btn" id="refresh-btn" type="button" title="强制刷新 · 清缓存重载" aria-label="强制刷新">↻</button></div>
+      <div class="topbar-tools"><span class="version-badge" id="app-version">v0.2.0</span><button class="refresh-btn" id="refresh-btn" type="button" title="强制刷新 · 清缓存重载" aria-label="强制刷新">↻</button></div>
       <div class="topbar-slot" id="db-account-slot"></div>
     </div>
   </header>
 
   <main class="page">
-    <section class="mode-switch" role="tablist">
+    <a class="raccoon-bar" id="raccoon-bar" href="javascript:void(0)" style="display:block;margin:0 0 10px;padding:10px 14px;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:12px;color:#9a3412;font-size:13px;text-decoration:none">🦝 浣熊树林 · 🌰 0 · 浣熊 0 只 →</a>
+
+    <!-- 浣熊树林（2026-10-28 儿童奖励体系） -->
+    <section id="raccoon-garden" class="hidden"></section>
+
+    <section class="mode-switch" id="mode-switch-sec" role="tablist">
       <button id="mode-chain" class="mode-btn active" type="button">🔗 接龙闯关</button>
       <button id="mode-blank" class="mode-btn" type="button">✏️ 成语填空</button>
     </section>
@@ -68,11 +73,11 @@
 
     <div id="feedback" class="feedback hidden"></div>
 
-    <div class="btn-row">
+    <div class="btn-row" id="btn-skip-row">
       <button id="btn-skip" class="btn" type="button">换一题</button>
     </div>
 
-    <section class="tips">
+    <section class="tips" id="tips-sec">
       <h2>玩法说明</h2>
       <ul>
         <li><b>接龙闯关</b>：选一个以上一个成语尾字（或同音字）开头的成语，接得越长分越高，接到底有奖励分。</li>

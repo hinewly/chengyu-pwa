@@ -1,7 +1,7 @@
 /* 成语接龙 · DaoBox 家族（v0.1.0） */
 "use strict";
 
-var APP_VERSION = "v0.1.2";
+var APP_VERSION = "v0.2.0";
 var STORE_KEY = "dbcy-save";
 var CHAIN_BASE = 10;   // 接龙基础分
 var CHAIN_END_BONUS = 30; // 接到底奖励
@@ -113,7 +113,8 @@ function makeChainQuestion() {
   if (fs.length === 0) {
     // 接到底
     scoreChain += CHAIN_END_BONUS;
-    showFeedback("good", "🎉 接到底啦！奖励 +" + CHAIN_END_BONUS);
+    earnNut(3, "接龙到底");
+    showFeedback("good", "🎉 接到底啦！奖励 +" + CHAIN_END_BONUS + " · 🌰+3");
     updateHud();
     saveGame();
     setTimeout(function () { if (!locked) startChain(); }, 1400);
@@ -210,6 +211,7 @@ function onAnswer(btn, o, correctRef) {
   if (o.ok) {
     btn.classList.add("correct");
     streak++;
+    earnNut(bonus ? 2 : 1, mode === "chain" ? "接龙答对" : "填空答对");
     var gain = (mode === "chain" ? CHAIN_BASE : BLANK_BASE);
     var bonus = 0;
     if (streak > 0 && streak % STREAK_BONUS_EVERY === 0) bonus = STREAK_BONUS;
@@ -288,6 +290,239 @@ function updateHud() {
   }
 }
 
+
+/* ---------- 浣熊树林（2026-10-28 儿童奖励体系：答对赚聪明果 → 兑换浣熊盲盒 → 图鉴收集） ---------- */
+var RACCOON_STORE_KEY = "dbcy_reward_v1";
+var RACCOON_TYPES = [
+  { key: "smart",  emoji: "💡", name: "机灵浣熊" },
+  { key: "wash",   emoji: "🧼", name: "爱干净浣熊" },
+  { key: "hat",    emoji: "🎩", name: "绅士浣熊" },
+  { key: "scarf",  emoji: "🧣", name: "围巾浣熊" },
+  { key: "hungry", emoji: "🍪", name: "饿饿浣熊" },
+  { key: "sleepy", emoji: "💤", name: "瞌睡浣熊" },
+  { key: "sport",  emoji: "⚽", name: "运动浣熊" },
+  { key: "star",   emoji: "🌟", name: "明星浣熊" },
+  { key: "rainbow",emoji: "🌈", name: "彩虹浣熊", memberOnly: true },
+  { key: "diamond",emoji: "💎", name: "钻石浣熊", memberOnly: true },
+];
+var RACCOON_PRICE = 30;             // 30 聪明果/只
+var RACCOON_FREE_LIMIT = 6;         // 游客免费额度
+var RACCOON_REGISTERED_LIMIT = 30;  // 注册用户额度（会员不限）
+
+function loadRaccoon() {
+  try {
+    var d = JSON.parse(localStorage.getItem(RACCOON_STORE_KEY));
+    return (d && typeof d.token === "number" && d.col) ? d
+      : { token: 0, tokenRecords: [], col: { total: 0, byType: {}, records: [] } };
+  } catch (e) { return { token: 0, tokenRecords: [], col: { total: 0, byType: {}, records: [] } }; }
+}
+function saveRaccoon(d) { try { localStorage.setItem(RACCOON_STORE_KEY, JSON.stringify(d)); } catch (e) {} }
+
+function chengyuTier() {
+  try { if (window.DaoBox && DaoBox.getTimeStatus && DaoBox._cyMember === undefined) DaoBox._cyMember = false; } catch (e) {}
+  var member = false;
+  try { member = !!(window.DaoBox && DaoBox._cyMember); } catch (e) {}
+  if (member) return "member";
+  var logged = false;
+  try { logged = !!(window.DaoBox && DaoBox.user); } catch (e) {}
+  return logged ? "registered" : "guest";
+}
+// 会员状态：启动后拉一次 timeStatus
+try {
+  if (window.DaoBox && DaoBox.getTimeStatus) {
+    DaoBox.getTimeStatus().then(function (t) { DaoBox._cyMember = !!(t && t.unlimited); }).catch(function () {});
+  }
+} catch (e) {}
+
+function raccoonLimit() {
+  var t = chengyuTier();
+  return t === "member" ? Infinity : t === "registered" ? RACCOON_REGISTERED_LIMIT : RACCOON_FREE_LIMIT;
+}
+
+function earnNut(n, reason) {
+  var d = loadRaccoon();
+  d.token += n;
+  var dt = new Date();
+  d.tokenRecords.unshift({ date: (dt.getMonth() + 1) + "月" + dt.getDate() + "日", score: reason, n: n });
+  d.tokenRecords = d.tokenRecords.slice(0, 40);
+  saveRaccoon(d);
+  chengyuRewardSync();
+  updateRaccoonBar();
+}
+
+function exchangeRaccoon() {
+  if (loadRaccoon().col.total >= raccoonLimit()) { showUnlockCy(); return; }
+  var d = loadRaccoon();
+  if (d.token < RACCOON_PRICE) { showFeedback("bad", "🌰 聪明果不够，还差 " + (RACCOON_PRICE - d.token) + " 个～"); return; }
+  var pool = chengyuTier() === "member" ? RACCOON_TYPES : RACCOON_TYPES.filter(function (t) { return !t.memberOnly; });
+  var fresh = pool.filter(function (t) { return !d.col.byType[t.key]; });
+  var pickPool = fresh.length ? fresh : pool;
+  var t = pickPool[Math.floor(Math.random() * pickPool.length)];
+  d.token -= RACCOON_PRICE;
+  var dt = new Date();
+  d.tokenRecords.unshift({ date: (dt.getMonth() + 1) + "月" + dt.getDate() + "日", score: "兑换浣熊", n: -RACCOON_PRICE });
+  d.tokenRecords = d.tokenRecords.slice(0, 40);
+  d.col.total += 1;
+  d.col.byType[t.key] = (d.col.byType[t.key] || 0) + 1;
+  d.col.records.unshift({ seq: d.col.total, date: (dt.getMonth() + 1) + "月" + dt.getDate() + "日", type: t.key });
+  d.col.records = d.col.records.slice(0, 60);
+  saveRaccoon(d);
+  chengyuRewardSync();
+  updateRaccoonBar();
+  showFeedback("good", "🎉 恭喜获得 " + t.emoji + t.name + "！");
+}
+
+function showUnlockCy() {
+  var old = document.getElementById("cy-unlock-mask");
+  if (old) old.remove();
+  var mask = document.createElement("div");
+  mask.id = "cy-unlock-mask";
+  mask.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px";
+  var limit = raccoonLimit() === Infinity ? RACCOON_FREE_LIMIT : raccoonLimit();
+  var accountUrl = (window.DB_HOME || "https://daobox.app") + "/account.html?src=chengyu";
+  mask.innerHTML = '<div style="background:#fff;border-radius:18px;padding:22px;max-width:340px;width:100%;text-align:center">' +
+    '<div style="font-size:40px">🦝</div><h3 style="margin:6px 0">免费浣熊已兑完</h3>' +
+    '<p style="font-size:14px;color:#374151;line-height:1.6">宝宝已经免费兑换了 ' + limit + ' 只浣熊，做得非常棒！<br>继续答题、赚聪明果都不受影响，<br>兑换新的浣熊需要爸爸妈妈解锁～</p>' +
+    '<p style="font-size:13px;color:#b45309"><b>推广价 ¥9.9 / 99 天</b>（原价 ¥19.9）<br>1 点 = 1 天 · 全家族通用</p>' +
+    '<a href="' + accountUrl + '" style="display:block;background:#f59e0b;color:#fff;padding:11px;border-radius:10px;font-weight:600;text-decoration:none;margin:10px 0">去账号中心充值（支付宝）</a>' +
+    '<button onclick="document.getElementById(\'cy-unlock-mask\').remove()" style="background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer">先不兑换，继续攒果</button></div>';
+  document.body.appendChild(mask);
+  mask.addEventListener("click", function (e) { if (e.target === mask) mask.remove(); });
+}
+
+/* 云同步（app=chengyu，2026-10-28） */
+var cySyncDirty = false, cySyncTimer = null;
+function chengyuRewardSync() {
+  cySyncDirty = true;
+  clearTimeout(cySyncTimer);
+  cySyncTimer = setTimeout(cyDoSync, 3000);
+}
+function cyDoSync() {
+  var token = null;
+  try { token = window.DaoBox && DaoBox.user && DaoBox.getToken && DaoBox.getToken(); } catch (e) {}
+  if (!token || !cySyncDirty) return;
+  cySyncDirty = false;
+  var d = loadRaccoon();
+  var species = 0;
+  RACCOON_TYPES.forEach(function (t) { if (d.col.byType[t.key]) species++; });
+  var payload = {
+    app: "chengyu", updated: Date.now(),
+    rewards: {
+      token: { key: "nut", name: "聪明果", emoji: "🌰", total: d.token },
+      collection: {
+        name: "浣熊树林", emoji: "🦝",
+        total: d.col.total, species: species, speciesMax: RACCOON_TYPES.length,
+        items: d.col.records.slice(0, 20).map(function (r) { return { species: r.type, seq: r.seq, date: r.date }; }),
+      },
+    },
+  };
+  fetch((window.DB_HOME || "https://daobox.app") + "/api/backup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: JSON.stringify({ app: "chengyu", data: JSON.stringify(payload) }),
+  }).catch(function () {});
+}
+function cySyncOnLogin() {
+  var token = null;
+  try { token = window.DaoBox && DaoBox.user && DaoBox.getToken && DaoBox.getToken(); } catch (e) {}
+  if (!token) return;
+  fetch((window.DB_HOME || "https://daobox.app") + "/api/backup?app=chengyu", { headers: { Authorization: "Bearer " + token } })
+    .then(function (r) { return r.json(); })
+    .then(function (dd) {
+      var cloud = dd && dd.ok && dd.data ? JSON.parse(dd.data) : null;
+      var local = loadRaccoon();
+      if (cloud && cloud.rewards) {
+        var t = (cloud.rewards.token || {}).total || 0;
+        var col = cloud.rewards.collection || {};
+        if (t > local.token || (col.total || 0) > local.col.total) {
+          local.token = Math.max(local.token, t);
+          local.col = { total: Math.max(local.col.total, col.total || 0), byType: {}, records: [] };
+          (col.items || []).forEach(function (it) { local.col.byType[it.species] = (local.col.byType[it.species] || 0) + 1; local.col.records.push(it); });
+          saveRaccoon(local);
+          updateRaccoonBar();
+        }
+      }
+    }).catch(function () {});
+}
+
+/* 浣熊树林视图 */
+var RACCOON_SLOTS = [[55,170],[100,176],[145,170],[190,174],[230,168],[75,135],[125,128],[172,132],[215,138],[145,95]];
+function raccoonSceneSVG(d) {
+  var rows = RACCOON_TYPES.map(function (t, i) {
+    var n = d.col.byType[t.key] || 0;
+    if (!n) return "";
+    var x = RACCOON_SLOTS[i][0], y = RACCOON_SLOTS[i][1];
+    var badge = n > 1 ? '<circle cx="' + (x + 15) + '" cy="' + (y - 13) + '" r="8" fill="#fff" stroke="#b45309" stroke-width="1.5"/><text x="' + (x + 15) + '" y="' + (y - 9) + '" font-size="9" text-anchor="middle" fill="#92400e" font-weight="bold">×' + n + '</text>' : "";
+    return '<g class="rc-sway" style="animation-delay:' + ((i % 4) * 0.4) + 's">' +
+      '<ellipse cx="' + x + '" cy="' + (y + 15) + '" rx="13" ry="4" fill="#000" opacity=".08"/>' +
+      '<circle cx="' + (x - 7) + '" cy="' + (y - 12) + '" r="4.5" fill="#5b4037"/><circle cx="' + (x + 7) + '" cy="' + (y - 12) + '" r="4.5" fill="#5b4037"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="12" fill="#9ca3af" stroke="#5b4037" stroke-width="1.5"/>' +
+      '<mask id="rcm' + i + '"><rect x="' + (x - 13) + '" y="' + (y - 13) + '" width="26" height="26" fill="#fff"/><ellipse cx="' + x + '" cy="' + (y - 3) + '" rx="8" ry="5" fill="#000"/></mask>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="12" fill="#5b4037" mask="url(#rcm' + i + ')"/>' +
+      '<circle cx="' + (x - 4) + '" cy="' + (y - 2) + '" r="1.8" fill="#1f2937"/><circle cx="' + (x + 4) + '" cy="' + (y - 2) + '" r="1.8" fill="#1f2937"/>' +
+      '<text x="' + x + '" y="' + (y - 19) + '" font-size="11" text-anchor="middle">' + t.emoji + '</text>' + badge + '</g>';
+  }).join("");
+  var tree = function (x, s) {
+    return '<line x1="' + x + '" y1="228" x2="' + x + '" y2="' + (228 - 120 * s) + '" stroke="#8d6e63" stroke-width="' + (7 * s) + '" stroke-linecap="round"/>' +
+      '<circle cx="' + (x - 18 * s) + '" cy="' + (108 - 10 * s) + '" r="' + (26 * s) + '" fill="#a5d6a7"/>' +
+      '<circle cx="' + (x + 18 * s) + '" cy="' + (104 - 10 * s) + '" r="' + (24 * s) + '" fill="#81c784"/>' +
+      '<circle cx="' + x + '" cy="' + (86 - 10 * s) + '" r="' + (22 * s) + '" fill="#a5d6a7"/>';
+  };
+  return '<svg viewBox="0 0 280 250" style="width:100%;max-width:420px;display:block;margin:0 auto">' +
+    '<ellipse cx="140" cy="232" rx="130" ry="12" fill="#e8e0cf"/>' + tree(30, 0.9) + tree(250, 0.8) + rows + '</svg>';
+}
+
+function updateRaccoonBar() {
+  var d = loadRaccoon();
+  var bar = $("raccoon-bar");
+  if (bar) bar.innerHTML = "🦝 浣熊树林 · 🌰 <b>" + d.token + "</b> · 浣熊 <b>" + d.col.total + "</b> 只 →";
+}
+
+function showGardenCy() {
+  var d = loadRaccoon();
+  var species = 0;
+  RACCOON_TYPES.forEach(function (t) { if (d.col.byType[t.key]) species++; });
+  var limit = raccoonLimit();
+  var quota = limit === Infinity
+    ? '<p style="text-align:center;font-size:13px;color:#059669">🔓 已解锁：兑换不限量，稀有浣熊也能抽到！</p>'
+    : d.col.total >= limit
+      ? '<p style="text-align:center;font-size:13px;color:#b45309">🎁 免费额度已用完（' + d.col.total + ' / ' + limit + ' 只）· 家长开通学习会员后不限量</p>'
+      : '<p style="text-align:center;font-size:13px;color:#6b7280">🎁 免费兑换额度：' + d.col.total + ' / ' + limit + ' 只' + (chengyuTier() === "guest" ? "（登录后再送 24 只）" : "") + '</p>';
+  $("mode-switch-sec").classList.add("hidden");
+  $("chain-panel").classList.add("hidden");
+  $("blank-panel").classList.add("hidden");
+  $("options").classList.add("hidden");
+  $("btn-skip-row").classList.add("hidden");
+  $("tips-sec").classList.add("hidden");
+  var garden = $("raccoon-garden");
+  garden.classList.remove("hidden");
+  var grid = RACCOON_TYPES.map(function (t) {
+    var n = d.col.byType[t.key] || 0;
+    var locked = t.memberOnly && chengyuTier() !== "member";
+    return '<div class="rc-cell' + (n ? "" : " locked") + '">' + (n ? t.emoji + "🦝" : (t.memberOnly && chengyuTier() !== "member" ? t.emoji : "❓")) + '<small>' + (n ? t.name + (n > 1 ? " ×" + n : "") : (locked ? "🔒会员专属" : "未解锁")) + '</small></div>';
+  }).join("");
+  var records = d.tokenRecords.length
+    ? d.tokenRecords.map(function (r) { return '<div class="rc-record"><span>' + r.date + ' · ' + r.score + '</span><b>' + (r.n > 0 ? "+" : "") + r.n + ' 🌰</b></div>'; }).join("")
+    : '<p style="font-size:13px;color:#9ca3af">还没有记录，去答题赚聪明果吧！</p>';
+  garden.innerHTML = '<div style="text-align:right"><button id="rc-back" class="btn" type="button">← 返回游戏</button></div>' +
+    '<h2 style="text-align:center;margin:8px 0">🦝 浣熊树林</h2>' +
+    '<p style="text-align:center;font-size:14px;margin:0 0 8px">🌰 聪明果 <b>' + d.token + '</b> 个 · 已收集 <b>' + species + ' / ' + RACCOON_TYPES.length + '</b> 种（共 ' + d.col.total + ' 只）</p>' +
+    raccoonSceneSVG(d) + quota +
+    '<div style="text-align:center;margin:10px 0"><button id="rc-ex" class="btn primary" type="button">🎁 用 ' + RACCOON_PRICE + ' 个聪明果换一只神秘浣熊</button></div>' +
+    '<div class="rc-grid">' + grid + '</div>' +
+    '<h3 style="font-size:14px;margin:14px 0 6px">📜 聪明果账本</h3>' + records +
+    '<p style="font-size:12px;color:#9ca3af;margin-top:10px">💡 登录 DaoBox 账号后，浣熊收集自动云备份。</p>';
+  $("rc-back").addEventListener("click", function () {
+    garden.classList.add("hidden");
+    $("mode-switch-sec").classList.remove("hidden");
+    if (mode === "chain") { $("chain-panel").classList.remove("hidden"); } else { $("blank-panel").classList.remove("hidden"); }
+    $("options").classList.remove("hidden");
+    $("btn-skip-row").classList.remove("hidden");
+    $("tips-sec").classList.remove("hidden");
+  });
+  $("rc-ex").addEventListener("click", exchangeRaccoon);
+}
+
 /* ---------- 模式切换 ---------- */
 function switchMode(m) {
   if (mode === m) return;
@@ -337,5 +572,8 @@ function boot() {
   loadGame();
   updateHud();
   startChain();
+  updateRaccoonBar();
+  $('raccoon-bar').addEventListener('click', function () { showGardenCy(); });
+  cySyncOnLogin();
 }
 document.addEventListener("DOMContentLoaded", boot);

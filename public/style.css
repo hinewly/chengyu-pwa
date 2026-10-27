@@ -154,3 +154,13 @@ body {
 #contact-email a { color: var(--muted); }
 
 .modal-mask.hidden { display: none; }
+
+/* ===== 浣熊树林（2026-10-28 儿童奖励体系） ===== */
+.rc-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px; }
+.rc-cell { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:8px 4px; text-align:center; font-size:20px; }
+.rc-cell small { display:block; font-size:10px; color:#374151; margin-top:2px; }
+.rc-cell.locked { background:#f9fafb; border-color:#e5e7eb; }
+.rc-cell.locked small { color:#9ca3af; }
+.rc-record { display:flex; justify-content:space-between; font-size:13px; padding:6px 10px; border-bottom:1px dashed #e5e7eb; }
+@keyframes rcSway { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+.rc-sway { animation: rcSway 2.6s ease-in-out infinite; }
