@@ -399,8 +399,8 @@ function chengyuRewardSync() {
 }
 function cyDoSync() {
   var token = null;
-  try { token = window.DaoBox && DaoBox.user && DaoBox.getToken && DaoBox.getToken(); } catch (e) {}
-  if (!token || !cySyncDirty) return;
+  var hasUser = !!(window.DaoBox && DaoBox.user);
+  if (!hasUser || !cySyncDirty) return;
   cySyncDirty = false;
   var d = loadRaccoon();
   var species = 0;
@@ -418,7 +418,7 @@ function cyDoSync() {
   };
   fetch((window.DB_HOME || "https://daobox.app") + "/api/backup", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    headers: { "Content-Type": "application/json" }, credentials: "include",
     body: JSON.stringify({ app: "chengyu", data: JSON.stringify(payload) }),
   }).catch(function () {});
 }
@@ -426,7 +426,7 @@ function cySyncOnLogin() {
   var token = null;
   try { token = window.DaoBox && DaoBox.user && DaoBox.getToken && DaoBox.getToken(); } catch (e) {}
   if (!token) return;
-  fetch((window.DB_HOME || "https://daobox.app") + "/api/backup?app=chengyu", { headers: { Authorization: "Bearer " + token } })
+  fetch((window.DB_HOME || "https://daobox.app") + "/api/backup?app=chengyu", { credentials: "include" })
     .then(function (r) { return r.json(); })
     .then(function (dd) {
       var cloud = dd && dd.ok && dd.data ? JSON.parse(dd.data) : null;
