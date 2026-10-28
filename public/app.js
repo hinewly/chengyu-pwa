@@ -476,6 +476,50 @@ function updateRaccoonBar() {
   if (bar) bar.innerHTML = "🦝 浣熊树林 · 🌰 <b>" + d.token + "</b> · 浣熊 <b>" + d.col.total + "</b> 只 →";
 }
 
+
+// ---------- 荣誉园图片导出（可保存/打印） ----------
+function raccoonPosterSvg(d) {
+  var esc = function (v) { return String(v || "").replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':'&quot;' })[c]; }); };
+  var user = {};
+  try { user = JSON.parse(localStorage.getItem("daobox_user") || "{}"); } catch (e) {}
+  var nick = user.nickname || "小朋友";
+  var types = RACCOON_TYPES;
+  var unlocked = types.filter(function (t) { return d.col.byType[t.key]; });
+  var scene = raccoonSceneSVG(d).replace(/ style="[^"]*"/, "").replace('<svg ', '<svg x="70" y="170" width="460" height="420" preserveAspectRatio="xMidYMid meet" ');
+  var cells = types.map(function (t, i) {
+    var n = d.col.byType[t.key] || 0;
+    var x = 590 + (i % 2) * 300;
+    var y = 175 + Math.floor(i / 2) * 86;
+    return '<g><rect x="' + x + '" y="' + y + '" width="284" height="72" rx="14" fill="' + (n ? '#f0fdf4' : '#f9fafb') + '" stroke="' + (n ? '#bbf7d0' : '#e5e7eb') + '"/>' +
+      '<text x="' + (x + 18) + '" y="' + (y + 30) + '" font-size="22">' + (n ? t.emoji + '🦝' : (t.memberOnly ? t.emoji : '❓')) + '</text>' +
+      '<text x="' + (x + 72) + '" y="' + (y + 29) + '" font-size="15" font-weight="600" fill="' + (n ? '#065f46' : '#6b7280') + '">' + (n ? esc(t.name) + (n > 1 ? ' ×' + n : '') : (t.memberOnly ? '会员专属' : '未解锁')) + '</text>' +
+      '<text x="' + (x + 72) + '" y="' + (y + 54) + '" font-size="13" fill="#6b7280">' + (n ? '已收集 ' + n + ' 只' : '继续加油！') + '</text></g>';
+  }).join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">' +
+    '<rect width="1200" height="760" fill="#fff7ed"/>' +
+    '<text x="600" y="64" font-size="36" font-weight="800" text-anchor="middle" fill="#111827">🦝 浣熊树林 · 荣誉图</text>' +
+    '<text x="600" y="100" font-size="18" text-anchor="middle" fill="#4b5563">' + esc(nick) + ' · 🌰 聪明果 × ' + (d.token || 0) + ' · 已收集 ' + unlocked.length + '/' + types.length + ' 种 · 共 ' + (d.col.total || 0) + ' 只</text>' +
+    '<rect x="40" y="140" width="1120" height="560" rx="24" fill="#fff" stroke="#e5e7eb"/>' + scene + cells +
+    '<text x="600" y="734" font-size="15" text-anchor="middle" fill="#9ca3af">DaoBox · ' + new Date().toLocaleDateString('zh-CN') + ' · 建议打印后裁剪保存</text></svg>';
+}
+function downloadRaccoonPoster() {
+  var svg = raccoonPosterSvg(loadRaccoon());
+  var img = new Image();
+  img.onload = function () {
+    var cv = document.createElement('canvas'); cv.width = 1200; cv.height = 760;
+    var ctx = cv.getContext('2d'); ctx.fillStyle = '#fff7ed'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(function (blob) {
+      if (!blob) { alert('图片生成失败，请使用浏览器打印'); return; }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '浣熊树林-荣誉图.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }, 'image/png');
+  };
+  img.onerror = function () { alert('图片生成失败，请使用浏览器打印'); };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 function showGardenCy() {
   var d = loadRaccoon();
   var species = 0;
@@ -506,7 +550,7 @@ function showGardenCy() {
     '<h2 style="text-align:center;margin:8px 0">🦝 浣熊树林</h2>' +
     '<p style="text-align:center;font-size:14px;margin:0 0 8px">🌰 聪明果 <b>' + d.token + '</b> 个 · 已收集 <b>' + species + ' / ' + RACCOON_TYPES.length + '</b> 种（共 ' + d.col.total + ' 只）</p>' +
     raccoonSceneSVG(d) + quota +
-    '<div style="text-align:center;margin:10px 0"><button id="rc-ex" class="btn primary" type="button">🎁 用 ' + RACCOON_PRICE + ' 个聪明果换一只神秘浣熊</button></div>' +
+    '<div style="text-align:center;margin:10px 0"><button id="rc-ex" class="btn primary" type="button">🎁 用 ' + RACCOON_PRICE + ' 个聪明果换一只神秘浣熊</button> <button id="rc-poster" class="btn" type="button" style="margin-left:8px">📸 生成图片</button></div>' +
     '<div class="rc-grid">' + grid + '</div>' +
     '<h3 style="font-size:14px;margin:14px 0 6px">📜 聪明果账本</h3>' + records +
     '<p style="font-size:12px;color:#9ca3af;margin-top:10px">💡 登录 DaoBox 账号后，浣熊收集自动云备份。</p>';
@@ -519,6 +563,7 @@ function showGardenCy() {
     $("tips-sec").classList.remove("hidden");
   });
   $("rc-ex").addEventListener("click", exchangeRaccoon);
+  $("rc-poster").addEventListener("click", downloadRaccoonPoster);
 }
 
 /* ---------- 模式切换 ---------- */
