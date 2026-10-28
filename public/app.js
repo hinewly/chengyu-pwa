@@ -423,9 +423,7 @@ function cyDoSync() {
   }).catch(function () {});
 }
 function cySyncOnLogin() {
-  var token = null;
-  try { token = window.DaoBox && DaoBox.user && DaoBox.getToken && DaoBox.getToken(); } catch (e) {}
-  if (!token) return;
+  if (!(window.DaoBox && DaoBox.user)) return;
   fetch((window.DB_HOME || "https://daobox.app") + "/api/backup?app=chengyu", { credentials: "include" })
     .then(function (r) { return r.json(); })
     .then(function (dd) {
@@ -574,6 +572,9 @@ function boot() {
   startChain();
   updateRaccoonBar();
   $('raccoon-bar').addEventListener('click', function () { showGardenCy(); });
-  cySyncOnLogin();
+  (function waitCyUser(n) {
+    if (window.DaoBox && DaoBox.user) { cySyncOnLogin(); return; }
+    if (n > 0) setTimeout(function () { waitCyUser(n - 1); }, 300);
+  })(20);
 }
 document.addEventListener("DOMContentLoaded", boot);
