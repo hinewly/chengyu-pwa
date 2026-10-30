@@ -538,6 +538,8 @@ function showGardenCy() {
   $("tips-sec").classList.add("hidden");
   var garden = $("raccoon-garden");
   garden.classList.remove("hidden");
+  var hw = document.getElementById("app-home-wrap");
+  if (hw) hw.style.display = "";
   var grid = RACCOON_TYPES.map(function (t) {
     var n = d.col.byType[t.key] || 0;
     var locked = t.memberOnly && chengyuTier() !== "member";
@@ -556,6 +558,8 @@ function showGardenCy() {
     '<p style="font-size:12px;color:#9ca3af;margin-top:10px">💡 登录 DaoBox 账号后，浣熊收集自动云备份。</p>';
   $("rc-back").addEventListener("click", function () {
     garden.classList.add("hidden");
+    var hw = document.getElementById("app-home-wrap");
+    if (hw) hw.style.display = "none";
     $("mode-switch-sec").classList.remove("hidden");
     if (mode === "chain") { $("chain-panel").classList.remove("hidden"); } else { $("blank-panel").classList.remove("hidden"); }
     $("options").classList.remove("hidden");

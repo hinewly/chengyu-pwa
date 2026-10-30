@@ -1,7 +1,7 @@
 /* 成语接龙 SW v1：静态资源缓存 */
-const CACHE = "dbcy-v4";
+const CACHE = "dbcy-v5";
 const ASSETS = [
-  "./", "./index.html", "./style.css?v=1", "./app.js?v=1", "./data.js?v=1",
+  "./", "./index.html", "./style.css?v=1", "./app.js?v=7", "./data.js?v=1",
   "./manifest.json", "./icons/favicon.svg",
   "./icons/icon-48.png", "./icons/icon-64.png", "./icons/icon-192.png", "./icons/icon-512.png"
 ];
