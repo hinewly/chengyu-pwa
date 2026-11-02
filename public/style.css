@@ -31,7 +31,7 @@ body {
 .brand { font-size: 17px; font-weight: 700; }
 .topbar-tools { display: inline-flex; align-items: center; gap: 6px; }
 .version-badge { font-size: 11px; color: #6b7280; background: #f3f4f6; border-radius: 999px; padding: 3px 7px; }
-.refresh-btn { width: 26px; height: 26px; padding: 0; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; color: #6b7280; font-size: 15px; line-height: 1; cursor: pointer; }
+.refresh-btn { height: 26px; padding: 0 10px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; color: #6b7280; font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .refresh-btn:hover { color: var(--accent); border-color: #fca5a5; }
 
 /* ---------- 主体 ---------- */
@@ -164,3 +164,7 @@ body {
 .rc-record { display:flex; justify-content:space-between; font-size:13px; padding:6px 10px; border-bottom:1px dashed #e5e7eb; }
 @keyframes rcSway { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
 .rc-sway { animation: rcSway 2.6s ease-in-out infinite; }
+
+/* v更新按钮分层：手机端缩短文案 */
+.rb-short{display:none}
+@media (max-width:480px){.rb-full{display:none}.rb-short{display:inline}}
