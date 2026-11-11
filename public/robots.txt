@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://chengyu.daobox.net.cn/sitemap.xml
