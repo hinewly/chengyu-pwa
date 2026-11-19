@@ -1,7 +1,7 @@
 /* 成语接龙 · DaoBox 家族（v0.1.0） */
 "use strict";
 
-var APP_VERSION = "v0.2.1";
+var APP_VERSION = "v0.2.2";
 var STORE_KEY = "dbcy-save";
 var CHAIN_BASE = 10;   // 接龙基础分
 var CHAIN_END_BONUS = 30; // 接到底奖励
@@ -603,8 +603,8 @@ function boot() {
     if ("caches" in window) {
       caches.keys().then(function (keys) {
         return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-      }).finally(function () { location.reload(); });
-    } else { location.reload(); }
+      }).finally(function () { location.replace(location.pathname + (location.search ? location.search + "&" : "?") + "_t=" + Date.now()); });
+    } else { location.replace(location.pathname + (location.search ? location.search + "&" : "?") + "_t=" + Date.now()); }
   });
   $("lock-close").addEventListener("click", function () { $("time-lock").classList.add("hidden"); });
   $("mode-chain").addEventListener("click", function () { switchMode("chain"); });
